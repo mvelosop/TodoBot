@@ -54,7 +54,7 @@ namespace TodoApp.Bot
         /// <seealso cref="https://docs.microsoft.com/en-us/azure/bot-service/bot-service-manage-channels?view=azure-bot-service-4.0"/>
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddBot<EchoWithCounterBot>(options =>
+            services.AddBot<TodoBot>(options =>
             {
                 var secretKey = Configuration.GetSection("botFileSecret")?.Value;
                 var botFilePath = Configuration.GetSection("botFilePath")?.Value;
@@ -74,7 +74,7 @@ namespace TodoApp.Bot
                 options.CredentialProvider = new SimpleCredentialProvider(endpointService.AppId, endpointService.AppPassword);
 
                 // Creates a logger for the application to use.
-                ILogger logger = _loggerFactory.CreateLogger<EchoWithCounterBot>();
+                ILogger logger = _loggerFactory.CreateLogger<TodoBot>();
 
                 // Catches any errors that occur during a conversation turn and logs them.
                 options.OnTurnError = async (context, exception) =>
@@ -114,7 +114,7 @@ namespace TodoApp.Bot
 
             // Create and register state accesssors.
             // Acessors created here are passed into the IBot-derived class on every turn.
-            services.AddSingleton<EchoBotAccessors>(sp =>
+            services.AddSingleton<TodoBotAccessors>(sp =>
             {
                 var options = sp.GetRequiredService<IOptions<BotFrameworkOptions>>().Value;
                 if (options == null)
@@ -130,9 +130,9 @@ namespace TodoApp.Bot
 
                 // Create the custom state accessor.
                 // State accessors enable other components to read and write individual properties of state.
-                var accessors = new EchoBotAccessors(conversationState)
+                var accessors = new TodoBotAccessors(conversationState)
                 {
-                    CounterState = conversationState.CreateProperty<CounterState>(EchoBotAccessors.CounterStateName),
+                    TodoState = conversationState.CreateProperty<TodoState>(TodoBotAccessors.TodoStateName),
                 };
 
                 return accessors;

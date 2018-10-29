@@ -8,7 +8,7 @@ namespace TodoApp.Bot
     /// Stored in <see cref="Microsoft.Bot.Builder.ConversationState"/> and
     /// backed by <see cref="Microsoft.Bot.Builder.MemoryStorage"/>.
     /// </summary>
-    public class CounterState
+    public class TodoState
     {
         /// <summary>
         /// Gets or sets the number of turns in the conversation.
