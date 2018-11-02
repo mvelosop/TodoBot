@@ -55,6 +55,20 @@ namespace TodoApp.Bot.UnitTests.Scenarios
             await testFlow.StartTestAsync();
         }
 
+        [Fact]
+        public async Task AddTask_WhenAddCommand()
+        {
+            // Arrange -----------------
+            var testFlow = CreateTestFlow()
+                .Send("/add")
+                .AssertReply("Type the name of the task")
+                .Send("Buy milk")
+                .AssertReply($@"Added task ""Buy milk"".");
+
+            // Act / Assert ------------
+            await testFlow.StartTestAsync();
+        }
+
         private TestFlow CreateTestFlow()
         {
             var fakeLoggerFactory = CreateFakeLoggerFactory();
