@@ -16,18 +16,7 @@ namespace TodoApp.Bot.UnitTests.Scenarios
         public async Task GreetBackByName_WhenUserGreets()
         {
             // Arrange -----------------
-            var fakeLoggerFactory = CreateFakeLoggerFactory();
-            var conversationState = new ConversationState(new MemoryStorage());
-            var adapter = new TestAdapter();
-
-            var accessors = new TodoBotAccessors(conversationState)
-            {
-                TodoState = conversationState.CreateProperty<TodoState>(TodoBotAccessors.TodoStateName)
-            };
-
-            var bot = new TodoBot(accessors, fakeLoggerFactory);
-
-            var testFlow = new TestFlow(adapter, bot.OnTurnAsync)
+            var testFlow = CreateTestFlow()
                 .Send("Hi")
                 .AssertReply("Hi User1");
 
@@ -39,6 +28,19 @@ namespace TodoApp.Bot.UnitTests.Scenarios
         public async Task DisplayHelpText_AfterGreetingBackTheUser()
         {
             // Arrange -----------------
+            var helpText = "**TO-DO Commands**\nType:\n- **/add** to add a task\n- **/list** to list all tasks";
+
+            var testFlow = CreateTestFlow()
+                .Send("Hi")
+                .AssertReply("Hi User1")
+                .AssertReply(helpText);
+
+            // Act / Assert ------------
+            await testFlow.StartTestAsync();
+        }
+
+        private TestFlow CreateTestFlow()
+        {
             var fakeLoggerFactory = CreateFakeLoggerFactory();
             var conversationState = new ConversationState(new MemoryStorage());
             var adapter = new TestAdapter();
@@ -49,15 +51,9 @@ namespace TodoApp.Bot.UnitTests.Scenarios
             };
 
             var bot = new TodoBot(accessors, fakeLoggerFactory);
-            var helpText = "**TO-DO Commands**\nType:\n**/add** to add a task\n**/list** to list all tasks"; 
+            var testFlow = new TestFlow(adapter, bot.OnTurnAsync);
 
-            var testFlow = new TestFlow(adapter, bot.OnTurnAsync)
-                .Send("Hi")
-                .AssertReply("Hi User1")
-                .AssertReply(helpText);
-
-            // Act / Assert ------------
-            await testFlow.StartTestAsync();
+            return testFlow;
         }
 
         private ILoggerFactory CreateFakeLoggerFactory()
@@ -70,5 +66,6 @@ namespace TodoApp.Bot.UnitTests.Scenarios
 
             return mock.Object;
         }
+
     }
 }
