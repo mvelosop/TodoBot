@@ -60,6 +60,7 @@ namespace TodoApp.Bot
         public async Task OnTurnAsync(ITurnContext turnContext, CancellationToken cancellationToken = default(CancellationToken))
         {
             var helpText = "**TO-DO Commands**\nType:\n- **/add** to add a task\n- **/list** to list all tasks";
+            var errorMessage = "I'm sorry I didn't understand that!";
 
             // Handle Message activity type, which is the main activity type for shown within a conversational interface
             // Message activities may contain text, speech, interactive cards, and binary or unknown attachments.
@@ -90,10 +91,7 @@ namespace TodoApp.Bot
                 }
                 else
                 {
-                    // Echo back to the user whatever they typed.
-                    responseMessage = $"Turn {state.TurnCount}: You sent '{turnContext.Activity.Text}'\n";
-
-                    await turnContext.SendActivityAsync(responseMessage);
+                    await turnContext.SendActivityAsync(errorMessage);
                 }
 
             }

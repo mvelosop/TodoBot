@@ -39,6 +39,22 @@ namespace TodoApp.Bot.UnitTests.Scenarios
             await testFlow.StartTestAsync();
         }
 
+        [Theory]
+        [InlineData(1, "foo")]
+        [InlineData(2, "bar")]
+        public async Task DisplayErrorMessage_WhenUnknownCommand(int test, string command)
+        {
+            // Arrange -----------------
+            var errorMessage = "I'm sorry I didn't understand that!";
+
+            var testFlow = CreateTestFlow()
+                .Send(command)
+                .AssertReply(errorMessage);
+
+            // Act / Assert ------------
+            await testFlow.StartTestAsync();
+        }
+
         private TestFlow CreateTestFlow()
         {
             var fakeLoggerFactory = CreateFakeLoggerFactory();
