@@ -12,7 +12,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoApp", "src\TodoApp\TodoApp.csproj", "{F84CF6C3-1694-43C8-A526-40DEE087F5BB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TodoApp", "src\TodoApp\TodoApp.csproj", "{F84CF6C3-1694-43C8-A526-40DEE087F5BB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{E123B2F0-2594-4FC6-AC87-22C2AA965F9C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoApp.Bot.UnitTests", "test\TodoApp.Bot.UnitTests\TodoApp.Bot.UnitTests.csproj", "{3B34C484-DEEC-427A-A634-1ACD56DEB4DA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,6 +32,10 @@ Global
 		{F84CF6C3-1694-43C8-A526-40DEE087F5BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F84CF6C3-1694-43C8-A526-40DEE087F5BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F84CF6C3-1694-43C8-A526-40DEE087F5BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B34C484-DEEC-427A-A634-1ACD56DEB4DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B34C484-DEEC-427A-A634-1ACD56DEB4DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B34C484-DEEC-427A-A634-1ACD56DEB4DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B34C484-DEEC-427A-A634-1ACD56DEB4DA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -35,6 +43,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{E6C521A1-F2CD-44C7-B55F-5C38A033A7DD} = {CFAAD593-7EC5-4474-822F-6321D8301184}
 		{F84CF6C3-1694-43C8-A526-40DEE087F5BB} = {CFAAD593-7EC5-4474-822F-6321D8301184}
+		{3B34C484-DEEC-427A-A634-1ACD56DEB4DA} = {E123B2F0-2594-4FC6-AC87-22C2AA965F9C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2D386DC8-23C2-4A94-9503-8D8382A398B4}

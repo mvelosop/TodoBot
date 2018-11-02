@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
@@ -58,6 +59,8 @@ namespace TodoApp.Bot
         /// <seealso cref="IMiddleware"/>
         public async Task OnTurnAsync(ITurnContext turnContext, CancellationToken cancellationToken = default(CancellationToken))
         {
+            var helpText = "**TO-DO Commands**\nType:\n- **/add** to add a task\n* **/list** to list all tasks";
+
             // Handle Message activity type, which is the main activity type for shown within a conversational interface
             // Message activities may contain text, speech, interactive cards, and binary or unknown attachments.
             // see https://aka.ms/about-bot-activity-message to learn more about the message and other activity types
@@ -75,9 +78,24 @@ namespace TodoApp.Bot
                 // Save the new turn count into the conversation state.
                 await _accessors.ConversationState.SaveChangesAsync(turnContext);
 
-                // Echo back to the user whatever they typed.
-                var responseMessage = $"Turn {state.TurnCount}: You sent '{turnContext.Activity.Text}'\n";
-                await turnContext.SendActivityAsync(responseMessage);
+                string responseMessage;
+
+                if (turnContext.Activity.Text == "Hi")
+                {
+                    // Greet back the user by name.
+                    responseMessage = $"Hi {turnContext.Activity.From.Name}";
+
+                    await turnContext.SendActivityAsync(responseMessage);
+                    await turnContext.SendActivityAsync(helpText);
+                }
+                else
+                {
+                    // Echo back to the user whatever they typed.
+                    responseMessage = $"Turn {state.TurnCount}: You sent '{turnContext.Activity.Text}'\n";
+
+                    await turnContext.SendActivityAsync(responseMessage);
+                }
+
             }
             else
             {
