@@ -5,8 +5,11 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
+using TodoApp.Domain.Model;
+using TodoApp.Services;
 
 namespace TodoApp.Bot
 {
@@ -25,6 +28,8 @@ namespace TodoApp.Bot
     {
         private readonly TodoBotAccessors _accessors;
         private readonly ILogger _logger;
+        private readonly ITodoTaskServices _services;
+        private readonly DialogSet _dialogs;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TodoBot"/> class.
@@ -32,7 +37,10 @@ namespace TodoApp.Bot
         /// <param name="accessors">A class containing <see cref="IStatePropertyAccessor{T}"/> used to manage state.</param>
         /// <param name="loggerFactory">A <see cref="ILoggerFactory"/> that is hooked to the Azure App Service provider.</param>
         /// <seealso cref="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-2.1#windows-eventlog-provider"/>
-        public TodoBot(TodoBotAccessors accessors, ILoggerFactory loggerFactory)
+        public TodoBot(
+            TodoBotAccessors accessors,
+            ILoggerFactory loggerFactory,
+            ITodoTaskServices services)
         {
             if (loggerFactory == null)
             {
@@ -42,6 +50,7 @@ namespace TodoApp.Bot
             _logger = loggerFactory.CreateLogger<TodoBot>();
             _logger.LogTrace("EchoBot turn start.");
             _accessors = accessors ?? throw new System.ArgumentNullException(nameof(accessors));
+            _services = services;
         }
 
         /// <summary>
@@ -91,7 +100,21 @@ namespace TodoApp.Bot
                 }
                 else
                 {
-                    await turnContext.SendActivityAsync(errorMessage);
+                    var input = turnContext.Activity.Text.Trim();
+
+                    if (input.StartsWith("/add", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var taskName = input.Substring(4).Trim();
+
+                        _services.AddTask(new TodoTask { Name = taskName });
+
+                        await turnContext.SendActivityAsync($@"Added task ""{taskName}"".");
+
+                    }
+                    else
+                    {
+                        await turnContext.SendActivityAsync(errorMessage);
+                    }
                 }
 
             }
