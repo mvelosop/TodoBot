@@ -10,7 +10,7 @@ namespace TodoApp.Bot.Services
 {
     public class TodoTaskTestServices : ITodoTaskServices
     {
-        List<TodoTask> _tasks;
+        private readonly List<TodoTask> _tasks;
 
         public TodoTaskTestServices()
         {
@@ -26,14 +26,6 @@ namespace TodoApp.Bot.Services
         public async Task<List<TodoTask>> GetTasks()
         {
             return _tasks;
-        }
-    }
-
-    public static class ConfigureTestServicesExtensions
-    {
-        public static void AddTodoAppTestServices(this IServiceCollection services)
-        {
-            services.AddSingleton<ITodoTaskServices>(sp => new TodoTaskTestServices());
         }
     }
 }

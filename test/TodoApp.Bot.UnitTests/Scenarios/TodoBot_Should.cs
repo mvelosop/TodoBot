@@ -69,18 +69,18 @@ namespace TodoApp.Bot.UnitTests.Scenarios
             var testFlow = CreateTestFlow()
                 .Send("/add")
                 .AssertReply("Enter the task name")
-                .Send("Buy milk")
+                .Send("foo")
                 .AssertReply("What's the due date?")
                 .Send("Tomorrow")
                 .AssertReply(activity =>
-                    activity.AsMessageActivity().Text.Should().StartWith(@"Added ""Buy milk"" due on"));
+                    activity.AsMessageActivity().Text.Should().StartWith(@"Added ""foo"" due on"));
 
             var expectedDueDate = DateTime.Today.AddDays(1).Date;
 
             // Act / Assert ------------
             await testFlow.StartTestAsync();
 
-            _tasks.Should().BeEquivalentTo(new[] { new TodoTask { Name = "Buy milk", DueDate = expectedDueDate } });
+            _tasks.Should().BeEquivalentTo(new[] { new TodoTask { Name = "foo", DueDate = expectedDueDate } });
         }
 
         [Fact]

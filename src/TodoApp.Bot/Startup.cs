@@ -16,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TodoApp.Bot.Services;
+using TodoApp.Services;
 
 namespace TodoApp.Bot
 {
@@ -142,7 +143,7 @@ namespace TodoApp.Bot
                 return accessors;
             });
 
-            services.AddTodoAppTestServices();
+            services.AddSingleton<ITodoTaskServices, TodoTaskTestServices>();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
