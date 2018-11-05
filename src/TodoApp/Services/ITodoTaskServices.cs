@@ -6,7 +6,7 @@ namespace TodoApp.Services
 {
     public interface ITodoTaskServices
     {
-        void AddTask(TodoTask task);
+        Task AddTask(TodoTask task);
 
         Task<List<TodoTask>> GetTasks();
     }

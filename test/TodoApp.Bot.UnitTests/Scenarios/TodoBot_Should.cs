@@ -1,10 +1,12 @@
 ﻿using FluentAssertions;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Adapters;
+using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TodoApp.Domain.Model;
@@ -15,7 +17,7 @@ namespace TodoApp.Bot.UnitTests.Scenarios
 {
     public class TodoBot_Should
     {
-        List<TodoTask> _tasks = new List<TodoTask>();
+        readonly List<TodoTask> _tasks = new List<TodoTask>();
 
         [Fact]
         public async Task GreetBackByName_WhenUserGreets()
@@ -65,28 +67,50 @@ namespace TodoApp.Bot.UnitTests.Scenarios
         {
             // Arrange -----------------
             var testFlow = CreateTestFlow()
-                .Send("/add Buy milk")
-                .AssertReply($@"Added task ""Buy milk"".");
+                .Send("/add")
+                .AssertReply("Enter the task name")
+                .Send("Buy milk")
+                .AssertReply("What's the due date?")
+                .Send("Tomorrow")
+                .AssertReply(activity =>
+                    activity.AsMessageActivity().Text.Should().StartWith(@"Added ""Buy milk"" due on"));
+
+            var expectedDueDate = DateTime.Today.AddDays(1).Date;
 
             // Act / Assert ------------
             await testFlow.StartTestAsync();
 
-            _tasks.Should().BeEquivalentTo(new[] { new TodoTask { Name = "Buy milk" } });
+            _tasks.Should().BeEquivalentTo(new[] { new TodoTask { Name = "Buy milk", DueDate = expectedDueDate } });
+        }
+
+        [Fact]
+        public async Task ListTasks_WhenListCommand()
+        {
+            _tasks.Add(new TodoTask { Name = "foo", DueDate = new DateTime(2018, 01, 01) });
+            _tasks.Add(new TodoTask { Name = "bar", DueDate = new DateTime(2018, 02, 01) });
+
+            // Arrange -----------------
+            var testFlow = CreateTestFlow()
+                .Send("/list")
+                .AssertReply("- foo (2018-01-01)\n- bar (2018-02-01)");
+
+            // Act / Assert ------------
+            await testFlow.StartTestAsync();
         }
 
         private TestFlow CreateTestFlow()
         {
             var storage = new MemoryStorage();
-
-            var loggerFactoryMock = CreateLoggerFactoryMock();
-            var servicesMock = CreateServicesMock();
             var conversationState = new ConversationState(storage);
-            var adapter = new TestAdapter();
+            var adapter = new TestAdapter().Use(new AutoSaveStateMiddleware(conversationState));
 
             var accessors = new TodoBotAccessors(conversationState)
             {
-                TodoState = conversationState.CreateProperty<TodoState>(TodoBotAccessors.TodoStateName)
+                DialogState = conversationState.CreateProperty<DialogState>(TodoBotAccessors.DialogStateKey)
             };
+
+            var loggerFactoryMock = CreateLoggerFactoryMock();
+            var servicesMock = CreateServicesMock();
 
             var bot = new TodoBot(accessors, loggerFactoryMock, servicesMock);
             var testFlow = new TestFlow(adapter, bot.OnTurnAsync);
@@ -99,7 +123,10 @@ namespace TodoApp.Bot.UnitTests.Scenarios
             var mock = new Mock<ITodoTaskServices>();
 
             mock.Setup(m => m.AddTask(It.IsAny<TodoTask>()))
+                .Returns(Task.CompletedTask)
                 .Callback<TodoTask>(t => _tasks.Add(t));
+
+            mock.Setup(m => m.GetTasks()).ReturnsAsync(_tasks);
 
             return mock.Object;
         }

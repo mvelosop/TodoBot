@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
@@ -26,6 +28,10 @@ namespace TodoApp.Bot
     /// <seealso cref="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-2.1"/>
     public class TodoBot : IBot
     {
+        private const string AddTaskDialog = nameof(AddTaskDialog);
+        private const string TaskNamePrompt = nameof(TaskNamePrompt);
+        private const string DueDatePrompt = nameof(DueDatePrompt);
+
         private readonly TodoBotAccessors _accessors;
         private readonly ILogger _logger;
         private readonly ITodoTaskServices _services;
@@ -51,6 +57,22 @@ namespace TodoApp.Bot
             _logger.LogTrace("EchoBot turn start.");
             _accessors = accessors ?? throw new System.ArgumentNullException(nameof(accessors));
             _services = services;
+
+            // Create the dialog set and add the prompts, including custom validation.
+            _dialogs = new DialogSet(_accessors.DialogState);
+            _dialogs.Add(new TextPrompt(TaskNamePrompt));
+            _dialogs.Add(new DateTimePrompt(DueDatePrompt));
+
+            // Define the steps of the waterfall dialog.
+            WaterfallStep[] steps = new WaterfallStep[]
+            {
+                PromptForNameAsync,
+                PromptForDueDateAsync,
+                ConfirmTaskAsync,
+            };
+
+            // Add the AddTaskDialog, with its steps, to the dialog set
+            _dialogs.Add(new WaterfallDialog(AddTaskDialog, steps));
         }
 
         /// <summary>
@@ -71,57 +93,106 @@ namespace TodoApp.Bot
             var helpText = "**TO-DO Commands**\nType:\n- **/add** to add a task\n- **/list** to list all tasks";
             var errorMessage = "I'm sorry I didn't understand that!";
 
+            string responseMessage;
+
             // Handle Message activity type, which is the main activity type for shown within a conversational interface
             // Message activities may contain text, speech, interactive cards, and binary or unknown attachments.
             // see https://aka.ms/about-bot-activity-message to learn more about the message and other activity types
             if (turnContext.Activity.Type == ActivityTypes.Message)
             {
-                // Get the conversation state from the turn context.
-                var state = await _accessors.TodoState.GetAsync(turnContext, () => new TodoState());
+                // Generate a dialog context for our dialog set.
+                var dialogContext = await _dialogs.CreateContextAsync(turnContext, cancellationToken);
 
-                // Bump the turn count for this conversation.
-                state.TurnCount++;
+                if (!(dialogContext.ActiveDialog is null))
+                {
+                    var dialogTurnResult = await dialogContext.ContinueDialogAsync(cancellationToken);
 
-                // Set the property using the accessor.
-                await _accessors.TodoState.SetAsync(turnContext, state);
+                    if (dialogTurnResult.Status == DialogTurnStatus.Complete)
+                    {
+                        var todoTask = dialogTurnResult.Result as TodoTask;
 
-                // Save the new turn count into the conversation state.
-                await _accessors.ConversationState.SaveChangesAsync(turnContext);
+                        await _services.AddTask(todoTask);
 
-                string responseMessage;
+                        var messageText = $@"Added ""{todoTask.Name}"" due on {todoTask.DueDate:yyyy-MM-dd}.";
 
-                if (turnContext.Activity.Text == "Hi")
+                        await turnContext.SendActivityAsync(messageText);
+                    }
+
+                    return;
+                }
+
+                if (turnContext.Activity.Text.Equals("hi", StringComparison.OrdinalIgnoreCase))
                 {
                     // Greet back the user by name.
                     responseMessage = $"Hi {turnContext.Activity.From.Name}";
 
                     await turnContext.SendActivityAsync(responseMessage);
                     await turnContext.SendActivityAsync(helpText);
+
+                    return;
                 }
-                else
+
+                if (turnContext.Activity.Text.Equals("/add", StringComparison.OrdinalIgnoreCase))
                 {
-                    var input = turnContext.Activity.Text.Trim();
+                    await dialogContext.BeginDialogAsync(AddTaskDialog, null, cancellationToken);
 
-                    if (input.StartsWith("/add", StringComparison.OrdinalIgnoreCase))
-                    {
-                        var taskName = input.Substring(4).Trim();
-
-                        _services.AddTask(new TodoTask { Name = taskName });
-
-                        await turnContext.SendActivityAsync($@"Added task ""{taskName}"".");
-
-                    }
-                    else
-                    {
-                        await turnContext.SendActivityAsync(errorMessage);
-                    }
+                    return;
                 }
 
+                if (turnContext.Activity.Text.Equals("/list", StringComparison.OrdinalIgnoreCase))
+                {
+                    var tasks = string.Join('\n', (await _services.GetTasks()).Select(t => $"- {t.Name} ({t.DueDate:yyyy-MM-dd})"));
+
+                    await turnContext.SendActivityAsync(tasks);
+
+                    return;
+                }
+
+                await turnContext.SendActivityAsync(errorMessage);
             }
             else
             {
                 await turnContext.SendActivityAsync($"{turnContext.Activity.Type} event detected");
             }
+        }
+
+        private async Task<DialogTurnResult> PromptForNameAsync(
+            WaterfallStepContext stepContext,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return await stepContext.PromptAsync(
+                TaskNamePrompt,
+                new PromptOptions { Prompt = MessageFactory.Text("Enter the task name") },
+                cancellationToken);
+        }
+
+        private async Task<DialogTurnResult> PromptForDueDateAsync(
+            WaterfallStepContext stepContext,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            stepContext.Values["name"] = stepContext.Result as string;
+
+            return await stepContext.PromptAsync(
+                DueDatePrompt,
+                new PromptOptions { Prompt = MessageFactory.Text("What's the due date?") },
+                cancellationToken);
+        }
+
+        private Task<DialogTurnResult> ConfirmTaskAsync(
+            WaterfallStepContext stepContext,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var resolution = (stepContext.Result as IList<DateTimeResolution>).First();
+
+            var dueDate = DateTime.Parse(resolution.Value ?? resolution.Start);
+
+            var todoTask = new TodoTask
+            {
+                Name = stepContext.Values["name"] as string,
+                DueDate = dueDate,
+            };
+
+            return stepContext.EndDialogAsync(todoTask, cancellationToken);
         }
     }
 }

@@ -3,6 +3,8 @@
 
 using System;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Dialogs;
+using TodoApp.Domain.Model;
 
 namespace TodoApp.Bot
 {
@@ -24,20 +26,9 @@ namespace TodoApp.Bot
             ConversationState = conversationState ?? throw new ArgumentNullException(nameof(conversationState));
         }
 
-        /// <summary>
-        /// Gets the <see cref="IStatePropertyAccessor{T}"/> name used for the <see cref="TodoState"/> accessor.
-        /// </summary>
-        /// <remarks>Accessors require a unique name.</remarks>
-        /// <value>The accessor name for the counter accessor.</value>
-        public static string TodoStateName { get; } = $"{nameof(TodoBotAccessors)}.TodoState";
+        public static string DialogStateKey => $"{nameof(TodoBotAccessors)}.{nameof(DialogState)}";
 
-        /// <summary>
-        /// Gets or sets the <see cref="IStatePropertyAccessor{T}"/> for CounterState.
-        /// </summary>
-        /// <value>
-        /// The accessor stores the turn count for the conversation.
-        /// </value>
-        public IStatePropertyAccessor<TodoState> TodoState { get; set; }
+        public IStatePropertyAccessor<DialogState> DialogState { get; set; }
 
         /// <summary>
         /// Gets the <see cref="ConversationState"/> object for the conversation.

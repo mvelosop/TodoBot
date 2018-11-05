@@ -6,6 +6,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Integration;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Bot.Configuration;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using TodoApp.Bot.Services;
 
 namespace TodoApp.Bot
 {
@@ -110,6 +112,8 @@ namespace TodoApp.Bot
                 var conversationState = new ConversationState(dataStore);
 
                 options.State.Add(conversationState);
+
+                options.Middleware.Add(new AutoSaveStateMiddleware(conversationState));
             });
 
             // Create and register state accesssors.
@@ -132,11 +136,13 @@ namespace TodoApp.Bot
                 // State accessors enable other components to read and write individual properties of state.
                 var accessors = new TodoBotAccessors(conversationState)
                 {
-                    TodoState = conversationState.CreateProperty<TodoState>(TodoBotAccessors.TodoStateName),
+                    DialogState = conversationState.CreateProperty<DialogState>(TodoBotAccessors.DialogStateKey),
                 };
 
                 return accessors;
             });
+
+            services.AddTodoAppTestServices();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
