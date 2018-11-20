@@ -122,11 +122,11 @@ namespace TodoApp.Bot.UnitTests.Scenarios
         {
             var mock = new Mock<ITodoTaskServices>();
 
-            mock.Setup(m => m.AddTask(It.IsAny<TodoTask>()))
-                .Returns(Task.CompletedTask)
-                .Callback<TodoTask>(t => _tasks.Add(t));
+            mock.Setup(m => m.AddTaskAsync(It.IsAny<TodoTask>()))
+                .Callback<TodoTask>(t => _tasks.Add(t))
+                .Returns(Task.CompletedTask);
 
-            mock.Setup(m => m.GetTasks()).ReturnsAsync(_tasks);
+            mock.Setup(m => m.GetTasksAsync()).ReturnsAsync(_tasks);
 
             return mock.Object;
         }

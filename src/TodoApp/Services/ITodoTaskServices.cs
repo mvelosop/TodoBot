@@ -6,8 +6,8 @@ namespace TodoApp.Services
 {
     public interface ITodoTaskServices
     {
-        Task AddTask(TodoTask task);
+        Task AddTaskAsync(TodoTask task);
 
-        Task<List<TodoTask>> GetTasks();
+        Task<List<TodoTask>> GetTasksAsync();
     }
 }

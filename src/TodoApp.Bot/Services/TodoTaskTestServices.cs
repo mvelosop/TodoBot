@@ -12,20 +12,10 @@ namespace TodoApp.Bot.Services
     {
         private readonly List<TodoTask> _tasks;
 
-        public TodoTaskTestServices()
-        {
-            _tasks = new List<TodoTask>();
-        }
+        public TodoTaskTestServices() => _tasks = new List<TodoTask>();
 
+        public async Task AddTaskAsync(TodoTask task) => _tasks.Add(task);
 
-        public async Task AddTask(TodoTask task)
-        {
-            _tasks.Add(task);
-        }
-
-        public async Task<List<TodoTask>> GetTasks()
-        {
-            return _tasks;
-        }
+        public async Task<List<TodoTask>> GetTasksAsync() => _tasks;
     }
 }

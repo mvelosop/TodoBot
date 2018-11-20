@@ -48,12 +48,7 @@ namespace TodoApp.Bot
             ILoggerFactory loggerFactory,
             ITodoTaskServices services)
         {
-            if (loggerFactory == null)
-            {
-                throw new System.ArgumentNullException(nameof(loggerFactory));
-            }
-
-            _logger = loggerFactory.CreateLogger<TodoBot>();
+            _logger = loggerFactory?.CreateLogger<TodoBot>() ?? throw new ArgumentException("Invalid logger", nameof(loggerFactory));
             _logger.LogTrace("EchoBot turn start.");
             _accessors = accessors ?? throw new System.ArgumentNullException(nameof(accessors));
             _services = services;
@@ -111,7 +106,7 @@ namespace TodoApp.Bot
                     {
                         var todoTask = dialogTurnResult.Result as TodoTask;
 
-                        await _services.AddTask(todoTask);
+                        await _services.AddTaskAsync(todoTask);
 
                         var messageText = $@"Added ""{todoTask.Name}"" due on {todoTask.DueDate:yyyy-MM-dd}.";
 
@@ -141,7 +136,7 @@ namespace TodoApp.Bot
 
                 if (turnContext.Activity.Text.Equals("/list", StringComparison.OrdinalIgnoreCase))
                 {
-                    var tasks = string.Join('\n', (await _services.GetTasks()).Select(t => $"- {t.Name} ({t.DueDate:yyyy-MM-dd})"));
+                    var tasks = string.Join('\n', (await _services.GetTasksAsync()).Select(t => $"- {t.Name} ({t.DueDate:yyyy-MM-dd})"));
 
                     await turnContext.SendActivityAsync(tasks);
 
